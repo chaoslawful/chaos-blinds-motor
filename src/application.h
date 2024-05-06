@@ -57,4 +57,6 @@ protected:
     HASensor m_sensor_motor;
 
     // unsigned long m_last_battery_update_ms; // 最后一次上报电池电量的时间
+    IRKey m_last_ir_key;    // 最后一次红外遥控器按键
+    long m_last_ir_key_pos; // 最后一次红外遥控器按键时的电机位置
 };

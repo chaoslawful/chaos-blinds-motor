@@ -21,7 +21,9 @@ Application::Application() : m_cover_full_close_pos(0),
                              m_btn_stop(Application::BTN_STOP_NAME),
                              //  m_sensor_bat(Application::SENSOR_BAT_NAME),
                              //  m_last_battery_update_ms(),
-                             m_sensor_motor(Application::SENSOR_MOTOR_NAME)
+                             m_sensor_motor(Application::SENSOR_MOTOR_NAME),
+                             m_last_ir_key(KEY_UNKNOWN),
+                             m_last_ir_key_pos(0)
 {
 }
 
@@ -247,6 +249,7 @@ void Application::on_ir_key_(IRKey key)
 {
     Application *app = Application::get_instance();
     MotorService *ms = MotorService::get_instance();
+    long cur_pos = ms->get_pos_pulse();
 
     switch (key)
     {
@@ -285,22 +288,46 @@ void Application::on_ir_key_(IRKey key)
         // 设置电机传感器状态
         app->m_sensor_motor.setValue("Closing");
         break;
-    case KEY_STAR: // 标记电机当前位置为打开点
-        Serial.println("IR remote: Blinds mark full open position");
-        app->m_cover_full_open_pos = ms->get_pos_pulse();
+    case KEY_2: // 清除电机标定位置
+        if (app->m_last_ir_key == KEY_0 && app->m_last_ir_key_pos == cur_pos)
+        {
+            // 顺序按下 0、2 键，清除电机标定位置
+            Serial.println("IR remote: Blinds clear motor calibration");
+            app->m_cover_full_close_pos = 0;
+            app->m_cover_full_open_pos = 0;
+            app->m_cover_current_pos = 0;
 
-        // 保存电机标定位置
-        app->save_motor_conf_();
+            // 保存电机标定位置
+            app->save_motor_conf_();
+        }
         break;
-    case KEY_POUND: // 标记电机当前位置为关闭点
-        Serial.println("IR remote: Blinds mark full close position");
-        app->m_cover_full_close_pos = ms->get_pos_pulse();
+    case KEY_1: // 标记电机当前位置为打开点
+        if (app->m_last_ir_key == KEY_0 && app->m_last_ir_key_pos == cur_pos)
+        {
+            // 顺序按下 0、1 键，标记电机当前位置为打开点
+            Serial.println("IR remote: Blinds mark full open position");
+            app->m_cover_full_open_pos = cur_pos;
 
-        // 保存电机标定位置
-        app->save_motor_conf_();
+            // 保存电机标定位置
+            app->save_motor_conf_();
+        }
+        break;
+    case KEY_3: // 标记电机当前位置为关闭点
+        if (app->m_last_ir_key == KEY_0 && app->m_last_ir_key_pos == cur_pos)
+        {
+            // 顺序按下 0、3 键，标记电机当前位置为关闭点
+            Serial.println("IR remote: Blinds mark full close position");
+            app->m_cover_full_close_pos = cur_pos;
+
+            // 保存电机标定位置
+            app->save_motor_conf_();
+        }
         break;
     default:
         Serial.println("IR remote: unknown key pressed");
         break;
     }
+
+    app->m_last_ir_key = key;
+    app->m_last_ir_key_pos = cur_pos;
 }
