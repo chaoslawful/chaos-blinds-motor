@@ -1,6 +1,6 @@
 #include "service/wireless.h"
 
-#include <FS.h>
+#include <LittleFS.h>
 #include <Arduino.h>
 #include <ArduinoOTA.h>
 
@@ -119,12 +119,13 @@ void WirelessService::setup_ota_()
                 type = "sketch";
             }
             else
-            { // U_SPIFFS
+            {
+                // U_FS
                 type = "filesystem";
             }
 
-            // 卸载关闭 SPIFFS 文件系统以避免 OTA 更新时造成数据损失
-            SPIFFS.end();
+            // 卸载关闭文件系统以避免 OTA 更新时造成数据损失
+            LittleFS.end();
 
             Serial.println("Start updating " + type);
         });
@@ -185,15 +186,15 @@ void WirelessService::wait_check_clear_btn_()
 void WirelessService::load_conf_()
 {
     Serial.println("Mounting filesystem ...");
-    if (SPIFFS.begin())
+    if (LittleFS.begin())
     {
         Serial.println("Filesystem mounted.");
 
-        if (SPIFFS.exists(MQTT_CONF_FILE))
+        if (LittleFS.exists(MQTT_CONF_FILE))
         {
             // MQTT 配置文件已存在, 读入其数据
             Serial.println("Reading MQTT conf file " + String(MQTT_CONF_FILE) + " ...");
-            File conf_file = SPIFFS.open(MQTT_CONF_FILE, "r");
+            File conf_file = LittleFS.open(MQTT_CONF_FILE, "r");
             if (conf_file)
             {
                 Serial.println("Opened config file");
@@ -233,9 +234,9 @@ void WirelessService::save_conf_()
     doc["mqtt_user"] = this->m_mqtt_user;
     doc["mqtt_pass"] = this->m_mqtt_pass;
 
-    if (SPIFFS.begin())
+    if (LittleFS.begin())
     {
-        File conf_file = SPIFFS.open(MQTT_CONF_FILE, "w");
+        File conf_file = LittleFS.open(MQTT_CONF_FILE, "w");
         if (!conf_file)
         {
             Serial.println("Failed to open config file for writing: " + String(MQTT_CONF_FILE));

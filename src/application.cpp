@@ -4,7 +4,7 @@
 #include "service/ir.h"
 #include "application.h"
 
-#include <FS.h>
+#include <LittleFS.h>
 #include <ESP8266WiFi.h>
 #include <ArduinoJson.h>
 
@@ -136,11 +136,11 @@ void Application::update()
 
 void Application::load_motor_conf_()
 {
-    if (SPIFFS.begin())
+    if (LittleFS.begin())
     {
-        if (SPIFFS.exists(MOTOR_CONF_FILE))
+        if (LittleFS.exists(MOTOR_CONF_FILE))
         {
-            File conf_file = SPIFFS.open(MOTOR_CONF_FILE, "r");
+            File conf_file = LittleFS.open(MOTOR_CONF_FILE, "r");
             if (conf_file)
             {
                 JsonDocument doc;
@@ -166,20 +166,20 @@ void Application::load_motor_conf_()
     }
     else
     {
-        Serial.println("Failed to open SPIFFS filesystem!");
+        Serial.println("Failed to open filesystem!");
     }
 }
 
 void Application::save_motor_conf_()
 {
-    if (SPIFFS.begin())
+    if (LittleFS.begin())
     {
         JsonDocument doc;
         doc["full_close_pos"] = this->m_cover_full_close_pos;
         doc["full_open_pos"] = this->m_cover_full_open_pos;
         doc["current_pos"] = this->m_cover_current_pos;
 
-        File conf_file = SPIFFS.open(MOTOR_CONF_FILE, "w");
+        File conf_file = LittleFS.open(MOTOR_CONF_FILE, "w");
         if (!conf_file)
         {
             Serial.println("Failed to open motor config file for writing: " + String(MOTOR_CONF_FILE));
@@ -194,7 +194,7 @@ void Application::save_motor_conf_()
     }
     else
     {
-        Serial.println("Failed to open SPIFFS filesystem!");
+        Serial.println("Failed to open filesystem!");
     }
 }
 
