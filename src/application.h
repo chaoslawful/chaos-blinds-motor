@@ -11,13 +11,11 @@ public:
     static constexpr const char *BTN_OPEN_NAME = "blinds_open";
     static constexpr const char *BTN_CLOSE_NAME = "blinds_close";
     static constexpr const char *BTN_STOP_NAME = "blinds_stop";
-    // static constexpr const char *SENSOR_BAT_NAME = "sensor_battery";
+    static constexpr const char *SENSOR_BAT_NAME = "sensor_battery";
     static constexpr const char *SENSOR_MOTOR_NAME = "sensor_motor";
     static constexpr const char *MOTOR_CONF_FILE = "/motor_conf.json";
     static constexpr int BATTERY_UPDATE_INTERVAL_MS = 2000;
     static constexpr int WATCHDOG_INTERVAL_MS = 60000;
-    static constexpr int ENERGYSAVER_MAX_IDLE_MS = 500;   // 从最后一次执行指令完毕后允许等待的最长空闲时间, 超过此时间将进入深度睡眠
-    static constexpr int ENERGYSAVER_DEEPSLEEP_MS = 5000; // 深度睡眠时长
 
     static Application *get_instance()
     {
@@ -59,6 +57,4 @@ protected:
     HASensor m_sensor_motor;
 
     // unsigned long m_last_battery_update_ms; // 最后一次上报电池电量的时间
-    // unsigned long m_last_action_ms; // 最后一次收到操作指令的时间
-    // bool m_is_device_idle;          // 设备是否处于空闲状态
 };

@@ -20,9 +20,8 @@ Application::Application() : m_cover_full_close_pos(0),
                              m_btn_close(Application::BTN_CLOSE_NAME),
                              m_btn_stop(Application::BTN_STOP_NAME),
                              //  m_sensor_bat(Application::SENSOR_BAT_NAME),
-                             m_sensor_motor(Application::SENSOR_MOTOR_NAME)
                              //  m_last_battery_update_ms(),
-                            //  m_is_device_idle(false)
+                             m_sensor_motor(Application::SENSOR_MOTOR_NAME)
 {
 }
 
@@ -95,10 +94,6 @@ void Application::begin()
 
     // 启用软件看门狗
     ESP.wdtEnable(Application::WATCHDOG_INTERVAL_MS);
-
-    // 设置设备空闲状态
-    // this->m_is_device_idle = true;
-    // this->m_last_action_ms = millis();
 }
 
 void Application::update()
@@ -130,15 +125,6 @@ void Application::update()
     //         this->m_sensor_bat.setIcon("mdi:battery-high");
     //         break;
     //     }
-    // }
-
-    // 节能检查
-    // if (this->m_is_device_idle && cur_ms - this->m_last_action_ms > ENERGYSAVER_MAX_IDLE_MS)
-    // {
-    //     // 设备空闲超过指定时间，进入深度睡眠
-    //     Serial.println("Device idle, entering deep sleep mode ...");
-    //     ESP.deepSleep(ENERGYSAVER_DEEPSLEEP_MS * 1000, RF_NO_CAL);
-    //     // NOTE 由于 ESP8266 深度睡眠后会重启，因此后续代码不会被执行
     // }
 
     // MQTT 通信
@@ -224,20 +210,12 @@ void Application::on_motor_stop_(long cur_pos)
 
     // 设置电机传感器状态
     app->m_sensor_motor.setValue("Stopped");
-
-    // 设置设备空闲状态
-    // app->m_is_device_idle = true;
-    // app->m_last_action_ms = millis();
 }
 
 void Application::on_cover_command_(HAButton *sender)
 {
     Application *app = Application::get_instance();
     MotorService *ms = MotorService::get_instance();
-
-    // 收到 HA 下发指令，取消设备空闲状态
-    // app->m_is_device_idle = false;
-    // app->m_last_action_ms = millis();
 
     if (sender == &(app->m_btn_open))
     {
@@ -269,10 +247,6 @@ void Application::on_ir_key_(IRKey key)
 {
     Application *app = Application::get_instance();
     MotorService *ms = MotorService::get_instance();
-
-    // 收到红外遥控器指令，取消设备空闲状态
-    // app->m_is_device_idle = false;
-    // app->m_last_action_ms = millis();
 
     switch (key)
     {
@@ -314,12 +288,14 @@ void Application::on_ir_key_(IRKey key)
     case KEY_STAR: // 标记电机当前位置为打开点
         Serial.println("IR remote: Blinds mark full open position");
         app->m_cover_full_open_pos = ms->get_pos_pulse();
+
         // 保存电机标定位置
         app->save_motor_conf_();
         break;
     case KEY_POUND: // 标记电机当前位置为关闭点
         Serial.println("IR remote: Blinds mark full close position");
         app->m_cover_full_close_pos = ms->get_pos_pulse();
+
         // 保存电机标定位置
         app->save_motor_conf_();
         break;
