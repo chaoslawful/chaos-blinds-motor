@@ -48,9 +48,9 @@ public:
     void set_motor_pos(long motor_pos) { m_encoder.write(motor_pos); }
     /** 电机运行至目标位置值 */
     void goto_pos(float motor_pos);
-    /** 电机正转 */
+    /** 电机正转（默认 CW） */
     void forward(int pwm);
-    /** 电机反转 */
+    /** 电机反转 (默认 CCW)*/
     void backward(int pwm);
     /** 电机停止 */
     void stop();

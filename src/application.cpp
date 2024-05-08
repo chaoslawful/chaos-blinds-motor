@@ -253,14 +253,14 @@ void Application::on_ir_key_(IRKey key)
 
     switch (key)
     {
-    case KEY_LEFT: // 电机反转
+    case KEY_LEFT: // 窗帘手动升起 (CCW)
         Serial.println("IR remote: Blinds manual open");
         ms->backward(MotorService::PWM_MIN_SPEED);
 
         // 设置电机传感器状态
         app->m_sensor_motor.setValue("Opening");
         break;
-    case KEY_RIGHT: // 电机正转
+    case KEY_RIGHT: // 窗帘手动放下 (CW)
         Serial.println("IR remote: Blinds manual close");
         ms->forward(MotorService::PWM_MIN_SPEED);
 
