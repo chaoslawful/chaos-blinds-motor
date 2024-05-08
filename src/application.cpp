@@ -297,8 +297,15 @@ void Application::on_ir_key_(IRKey key)
             app->m_cover_full_open_pos = 0;
             app->m_cover_current_pos = 0;
 
+            // 重置电机编码器位置
+            ms->set_motor_pos(0);
+
             // 保存电机标定位置
             app->save_motor_conf_();
+        }
+        else
+        {
+            Serial.println("IR remote: Blinds clear motor calibration failed, wrong key sequence");
         }
         break;
     case KEY_1: // 标记电机当前位置为打开点
@@ -311,6 +318,10 @@ void Application::on_ir_key_(IRKey key)
             // 保存电机标定位置
             app->save_motor_conf_();
         }
+        else
+        {
+            Serial.println("IR remote: Blinds mark full open position failed, wrong key sequence");
+        }
         break;
     case KEY_3: // 标记电机当前位置为关闭点
         if (app->m_last_ir_key == KEY_0 && app->m_last_ir_key_pos == cur_pos)
@@ -322,6 +333,13 @@ void Application::on_ir_key_(IRKey key)
             // 保存电机标定位置
             app->save_motor_conf_();
         }
+        else
+        {
+            Serial.println("IR remote: Blinds mark full close position failed, wrong key sequence");
+        }
+        break;
+    case KEY_0: // 功能键序列开始
+        Serial.println("IR remote: Blinds function key sequence start");
         break;
     default:
         Serial.println("IR remote: unknown key pressed");
