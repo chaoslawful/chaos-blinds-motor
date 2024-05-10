@@ -53,8 +53,8 @@ void Application::begin()
     m_device.setUniqueId(mac, sizeof(mac));
     m_device.setName("混沌猫升窗器");
     m_device.setSoftwareVersion("1.0.0");
-    m_device.setManufacturer("混沌猫工作室");
-    m_device.setModel("CCW-001");
+    m_device.setManufacturer("混沌猫的窝");
+    m_device.setModel("CBM-001");
 
     // 使用 LWT 特性，当设备离线时，HA 会自动更新设备状态
     m_device.enableSharedAvailability();

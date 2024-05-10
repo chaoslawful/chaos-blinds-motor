@@ -11,7 +11,7 @@ public:
     static constexpr int PWM_RANGE = 255;               // PWM 输出值范围
     static constexpr int PWM_FREQ = 128;                // PWM 输出频率
     static constexpr int PWM_DEADZONE = 30;             // PWM 输出死区
-    static constexpr int PWM_MIN_SPEED = 40;            // PWM 最低速阈值
+    static constexpr int PWM_MIN_SPEED = 255;           // PWM 最低速阈值
     static constexpr int PPR = 12;                      // 编码器每转一圈的脉冲数
     static constexpr int UPDATE_DT_IN_MS = 10;          // 电机速度更新时间间隔 (ms)
     static constexpr int SPEED_CUTOFF_FREQ = 5;         // 电机速度低通滤波截止频率 5 Hz
