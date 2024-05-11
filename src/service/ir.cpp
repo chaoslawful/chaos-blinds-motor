@@ -9,7 +9,7 @@
 IRService *IRService::m_instance = nullptr;
 
 IRService::IRService()
-    : m_last_poll_ms(0), m_last_key(KEY_UNKNOWN), m_last_key_ms(0), m_debounce_ms(DEFAULT_DEBOUNCE_TIME_MS), m_anykey_handler(nullptr)
+    : m_last_key(KEY_UNKNOWN), m_last_key_ms(0), m_debounce_ms(DEFAULT_DEBOUNCE_TIME_MS), m_last_poll_ms(0), m_anykey_handler(nullptr)
 {
     pinMode(IR_RECEIVE_PWR, OUTPUT);
     digitalWrite(IR_RECEIVE_PWR, LOW);
