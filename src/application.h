@@ -46,6 +46,7 @@ protected:
     long m_cover_full_close_pos; // 窗帘完全关闭时的电机标定位置
     long m_cover_full_open_pos;  // 窗帘完全打开时的电机标定位置
     long m_cover_current_pos;    // 当前电机停止位置
+    bool m_motor_reversed;       // 电机是否反向
 
     WiFiClient m_wifi_client;
     HADevice m_device;

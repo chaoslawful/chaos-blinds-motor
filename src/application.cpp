@@ -12,6 +12,7 @@ Application *Application::m_instance = nullptr;
 Application::Application() : m_cover_full_close_pos(0),
                              m_cover_full_open_pos(0),
                              m_cover_current_pos(0),
+                             m_motor_reversed(false),
                              m_wifi_client(),
                              m_device(),
                              m_mqtt(m_wifi_client, m_device),
@@ -40,6 +41,7 @@ void Application::begin()
     MotorService *ms = MotorService::get_instance();
     // 设置电机当前位置
     ms->set_motor_pos(this->m_cover_current_pos);
+    ms->set_reverse(this->m_motor_reversed);
     ms->set_stop_callback(&Application::on_motor_stop_);
 
     // 获取 WiFi MAC 地址
@@ -110,6 +112,8 @@ void Application::load_motor_conf_()
                     this->m_cover_full_close_pos = doc["full_close_pos"];
                     this->m_cover_full_open_pos = doc["full_open_pos"];
                     this->m_cover_current_pos = doc["current_pos"];
+                    // 未设置 reversed 键时默认电机转向为正向
+                    this->m_motor_reversed = doc["reversed"] | false;
                 }
                 else
                 {
@@ -138,6 +142,7 @@ void Application::save_motor_conf_()
         doc["full_close_pos"] = this->m_cover_full_close_pos;
         doc["full_open_pos"] = this->m_cover_full_open_pos;
         doc["current_pos"] = this->m_cover_current_pos;
+        doc["reversed"] = this->m_motor_reversed;
 
         File conf_file = LittleFS.open(MOTOR_CONF_FILE, "w");
         if (!conf_file)
@@ -245,6 +250,25 @@ void Application::on_ir_key_(IRKey key)
 
         // 设置电机传感器状态
         app->m_sensor_motor.setValue("Closing");
+        break;
+    case KEY_POUND: // 切换电机转向
+        if (app->m_last_ir_key == KEY_0 && app->m_last_ir_key_pos == cur_pos)
+        {
+            // 顺序按下 0、# 键，切换电机转向
+            Serial.println("IR remote: Toggle motor direction");
+            app->m_motor_reversed = !ms->get_reverse();
+            Serial.println("Motor direction set to: " + String(app->m_motor_reversed ? "reversed" : "normal"));
+
+            // 设置电机转向
+            ms->set_reverse(app->m_motor_reversed);
+
+            // 保存电机配置
+            app->save_motor_conf_();
+        }
+        else
+        {
+            Serial.println("IR remote: Toggle motor direction failed, wrong key sequence");
+        }
         break;
     case KEY_2: // 清除电机标定位置
         if (app->m_last_ir_key == KEY_0 && app->m_last_ir_key_pos == cur_pos)
