@@ -1,7 +1,6 @@
 # Chaos Blinds Motor
 
-[English](README.md)
-[中文](README-zh.md)
+[English](README.md) | [中文](README-zh.md)
 
 This project implements a blinds motor based on ESP8266 MCU, allowing users to manually control the blinds opening and closing using a universal infrared remote control or remotely via the HomeAssistant gateway. Compared to existing products on the market, this project has the following benefits:
 
