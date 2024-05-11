@@ -1,4 +1,3 @@
-#include "service/battery.h"
 #include "service/wireless.h"
 #include "service/motor.h"
 #include "service/ir.h"
@@ -19,8 +18,6 @@ Application::Application() : m_cover_full_close_pos(0),
                              m_btn_open(Application::BTN_OPEN_NAME),
                              m_btn_close(Application::BTN_CLOSE_NAME),
                              m_btn_stop(Application::BTN_STOP_NAME),
-                             //  m_sensor_bat(Application::SENSOR_BAT_NAME),
-                             //  m_last_battery_update_ms(),
                              m_sensor_motor(Application::SENSOR_MOTOR_NAME),
                              m_last_ir_key(KEY_UNKNOWN),
                              m_last_ir_key_pos(0)
@@ -76,16 +73,6 @@ void Application::begin()
     m_btn_open.setRetain(false);
     m_btn_stop.onCommand(&Application::on_cover_command_);
 
-    // m_sensor_bat.setName("电池电量");
-    // m_sensor_bat.setIcon("mdi:battery-high");
-    // {
-    //     BatteryService *bs = BatteryService::get_instance();
-    //     char buf[6] = {6};
-    //     snprintf(buf, sizeof(buf), "%.1f", bs->get_voltage());
-    //     m_sensor_bat.setValue(buf);
-    // }
-    // m_sensor_bat.setUnitOfMeasurement("V");
-
     m_sensor_motor.setName("电机状态");
     m_sensor_motor.setIcon("mdi:engine");
     m_sensor_motor.setValue("Stopped");
@@ -100,35 +87,6 @@ void Application::begin()
 
 void Application::update()
 {
-    // unsigned long cur_ms = millis();
-
-    // 电池电量上报 HA
-    // if (cur_ms - this->m_last_battery_update_ms > BATTERY_UPDATE_INTERVAL_MS)
-    // {
-    //     this->m_last_battery_update_ms = cur_ms;
-
-    //     // 定时更新电池电量
-    //     BatteryService *battery_service = BatteryService::get_instance();
-    //     char buf[6] = {0};
-    //     snprintf(buf, sizeof(buf), "%.1f", battery_service->get_voltage());
-    //     this->m_sensor_bat.setValue(buf);
-
-    //     // 根据电池电量状态更新 HA 传感器图标
-    //     switch (battery_service->get_status())
-    //     {
-    //     case BATTERY_CRITICAL:
-    //         this->m_sensor_bat.setIcon("mdi:battery-charging-low");
-    //         break;
-    //     case BATTERY_MEDIUM:
-    //         this->m_sensor_bat.setIcon("mdi:battery-medium");
-    //         break;
-    //     case BATTERY_NORMAL:
-    //     default:
-    //         this->m_sensor_bat.setIcon("mdi:battery-high");
-    //         break;
-    //     }
-    // }
-
     // MQTT 通信
     m_mqtt.loop();
 
