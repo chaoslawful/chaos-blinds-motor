@@ -1,7 +1,7 @@
 # 混沌猫升窗器
 
-[![en](https://img.shields.io/badge/lang-en-red.svg)](README.md)
-[![zh](https://img.shields.io/badge/lang-zh-green.svg)](README-zh.md)
+[English](README.md)
+[中文](README-zh.md)
 
 本项目实现了基于 ESP8266 MCU 的百叶窗升窗器，允许用户通过通用红外遥控器手工控制或通过 HomeAssistant 网关远程遥控百叶窗开闭。和市面上现有商品相比，本项目有如下好处：
 
