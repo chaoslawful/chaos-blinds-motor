@@ -1,6 +1,7 @@
 #include "service/wireless.h"
 #include "service/motor.h"
 #include "service/ir.h"
+#include "service/logger.h"
 #include "application.h"
 
 #include <LittleFS.h>
@@ -117,20 +118,19 @@ void Application::load_motor_conf_()
                 }
                 else
                 {
-                    Serial.print("Failed to parse motor config file: ");
-                    Serial.println(err.c_str());
+                    LoggerService::printf("Failed to parse motor config file: %s\n", err.c_str());
                 }
                 conf_file.close();
             }
         }
         else
         {
-            Serial.println("Motor config file " + String(MOTOR_CONF_FILE) + " found, using default values.");
+            LoggerService::println("Motor config file " + String(MOTOR_CONF_FILE) + " not found, using default values.");
         }
     }
     else
     {
-        Serial.println("Failed to open filesystem!");
+        LoggerService::println("Failed to open filesystem!");
     }
 }
 
@@ -147,19 +147,19 @@ void Application::save_motor_conf_()
         File conf_file = LittleFS.open(MOTOR_CONF_FILE, "w");
         if (!conf_file)
         {
-            Serial.println("Failed to open motor config file for writing: " + String(MOTOR_CONF_FILE));
+            LoggerService::println("Failed to open motor config file for writing: " + String(MOTOR_CONF_FILE));
             return;
         }
 
         serializeJson(doc, conf_file);
         serializeJson(doc, Serial);
-        Serial.println();
+        LoggerService::println();
 
         conf_file.close();
     }
     else
     {
-        Serial.println("Failed to open filesystem!");
+        LoggerService::println("Failed to open filesystem!");
     }
 }
 
@@ -167,7 +167,7 @@ void Application::on_motor_stop_(long cur_pos)
 {
     Application *app = Application::get_instance();
 
-    Serial.println("Callback: Motor stopped at position: " + String(cur_pos));
+    LoggerService::println("Callback: Motor stopped at position: " + String(cur_pos));
 
     // 保存电机当前位置
     app->m_cover_current_pos = cur_pos;
@@ -184,7 +184,7 @@ void Application::on_cover_command_(HAButton *sender)
 
     if (sender == &(app->m_btn_open))
     {
-        Serial.println("Command: Blinds auto open");
+        LoggerService::println("Command: Blinds auto open");
         ms->goto_pos(app->m_cover_full_open_pos);
 
         // 设置电机传感器状态
@@ -192,7 +192,7 @@ void Application::on_cover_command_(HAButton *sender)
     }
     else if (sender == &(app->m_btn_close))
     {
-        Serial.println("Command: Blinds auto close");
+        LoggerService::println("Command: Blinds auto close");
         ms->goto_pos(app->m_cover_full_close_pos);
 
         // 设置电机传感器状态
@@ -200,7 +200,7 @@ void Application::on_cover_command_(HAButton *sender)
     }
     else if (sender == &(app->m_btn_stop))
     {
-        Serial.println("Command: Blinds stop");
+        LoggerService::println("Command: Blinds stop");
         ms->stop();
 
         // 设置电机传感器状态
@@ -217,35 +217,35 @@ void Application::on_ir_key_(IRKey key)
     switch (key)
     {
     case KEY_LEFT: // 窗帘手动升起 (CCW)
-        Serial.println("IR remote: Blinds manual open");
+        LoggerService::println("IR remote: Blinds manual open");
         ms->backward(MotorService::PWM_MIN_SPEED);
 
         // 设置电机传感器状态
         app->m_sensor_motor.setValue("Opening");
         break;
     case KEY_RIGHT: // 窗帘手动放下 (CW)
-        Serial.println("IR remote: Blinds manual close");
+        LoggerService::println("IR remote: Blinds manual close");
         ms->forward(MotorService::PWM_MIN_SPEED);
 
         // 设置电机传感器状态
         app->m_sensor_motor.setValue("Closing");
         break;
     case KEY_OK: // 电机停止
-        Serial.println("IR remote: Blinds stop");
+        LoggerService::println("IR remote: Blinds stop");
         ms->stop();
 
         // 设置电机传感器状态
         app->m_sensor_motor.setValue("Stopped");
         break;
     case KEY_UP: // 电机运行至完全打开
-        Serial.println("IR remote: Blinds auto open");
+        LoggerService::println("IR remote: Blinds auto open");
         ms->goto_pos(app->m_cover_full_open_pos);
 
         // 设置电机传感器状态
         app->m_sensor_motor.setValue("Opening");
         break;
     case KEY_DOWN: // 电机运行至完全关闭
-        Serial.println("IR remote: Blinds auto close");
+        LoggerService::println("IR remote: Blinds auto close");
         ms->goto_pos(app->m_cover_full_close_pos);
 
         // 设置电机传感器状态
@@ -255,9 +255,9 @@ void Application::on_ir_key_(IRKey key)
         if (app->m_last_ir_key == KEY_0 && app->m_last_ir_key_pos == cur_pos)
         {
             // 顺序按下 0、# 键，切换电机转向
-            Serial.println("IR remote: Toggle motor direction");
+            LoggerService::println("IR remote: Toggle motor direction");
             app->m_motor_reversed = !ms->get_reverse();
-            Serial.println("Motor direction set to: " + String(app->m_motor_reversed ? "reversed" : "normal"));
+            LoggerService::println("Motor direction set to: " + String(app->m_motor_reversed ? "reversed" : "normal"));
 
             // 设置电机转向
             ms->set_reverse(app->m_motor_reversed);
@@ -267,14 +267,14 @@ void Application::on_ir_key_(IRKey key)
         }
         else
         {
-            Serial.println("IR remote: Toggle motor direction failed, wrong key sequence");
+            LoggerService::println("IR remote: Toggle motor direction failed, wrong key sequence");
         }
         break;
     case KEY_2: // 清除电机标定位置
         if (app->m_last_ir_key == KEY_0 && app->m_last_ir_key_pos == cur_pos)
         {
             // 顺序按下 0、2 键，清除电机标定位置
-            Serial.println("IR remote: Blinds clear motor calibration");
+            LoggerService::println("IR remote: Blinds clear motor calibration");
             app->m_cover_full_close_pos = 0;
             app->m_cover_full_open_pos = 0;
             app->m_cover_current_pos = 0;
@@ -287,14 +287,14 @@ void Application::on_ir_key_(IRKey key)
         }
         else
         {
-            Serial.println("IR remote: Blinds clear motor calibration failed, wrong key sequence");
+            LoggerService::println("IR remote: Blinds clear motor calibration failed, wrong key sequence");
         }
         break;
     case KEY_1: // 标记电机当前位置为打开点
         if (app->m_last_ir_key == KEY_0 && app->m_last_ir_key_pos == cur_pos)
         {
             // 顺序按下 0、1 键，标记电机当前位置为打开点
-            Serial.println("IR remote: Blinds mark full open position");
+            LoggerService::println("IR remote: Blinds mark full open position");
             app->m_cover_full_open_pos = cur_pos;
 
             // 保存电机标定位置
@@ -302,14 +302,14 @@ void Application::on_ir_key_(IRKey key)
         }
         else
         {
-            Serial.println("IR remote: Blinds mark full open position failed, wrong key sequence");
+            LoggerService::println("IR remote: Blinds mark full open position failed, wrong key sequence");
         }
         break;
     case KEY_3: // 标记电机当前位置为关闭点
         if (app->m_last_ir_key == KEY_0 && app->m_last_ir_key_pos == cur_pos)
         {
             // 顺序按下 0、3 键，标记电机当前位置为关闭点
-            Serial.println("IR remote: Blinds mark full close position");
+            LoggerService::println("IR remote: Blinds mark full close position");
             app->m_cover_full_close_pos = cur_pos;
 
             // 保存电机标定位置
@@ -317,14 +317,14 @@ void Application::on_ir_key_(IRKey key)
         }
         else
         {
-            Serial.println("IR remote: Blinds mark full close position failed, wrong key sequence");
+            LoggerService::println("IR remote: Blinds mark full close position failed, wrong key sequence");
         }
         break;
     case KEY_0: // 功能键序列开始
-        Serial.println("IR remote: Blinds function key sequence start");
+        LoggerService::println("IR remote: Blinds function key sequence start");
         break;
     default:
-        Serial.println("IR remote: unknown key pressed");
+        LoggerService::println("IR remote: unknown key pressed");
         break;
     }
 

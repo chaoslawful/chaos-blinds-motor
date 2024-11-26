@@ -1,6 +1,7 @@
 #include "config/pins.h"
 #include "utility/misc.h"
 #include "service/motor.h"
+#include "service/logger.h"
 
 MotorService *MotorService::m_instance = nullptr;
 
@@ -197,7 +198,7 @@ void MotorService::_poll_run_pid()
             m_pid_last_report_ms = cur_ms;
 
             // 以 Teleplot 格式输出 PWM 数据以绘图
-            Serial.printf(">pwm: %d\n", pwm_signal);
+            LoggerService::printf(">pwm: %d\n", pwm_signal);
         }
     }
 }
@@ -226,8 +227,8 @@ void MotorService::_poll_check_stable()
         {
             // 连续多个采样点满足误差要求，可以认为电机到达目标
             unsigned long stable_time = millis() - m_pid_target_set_ms;
-            Serial.printf("cur_pos=%ld, pos_setpoint=%f, n_good_sample=%d\n", enc_val, m_pid_setpoint, m_good_sample_count);
-            Serial.printf("Stable time %ld ms\n", stable_time);
+            LoggerService::printf("cur_pos=%ld, pos_setpoint=%f, n_good_sample=%d\n", enc_val, m_pid_setpoint, m_good_sample_count);
+            LoggerService::printf("Stable time %ld ms\n", stable_time);
             m_motor_reached_stable = true;
 
             // 重置达标样本点数
@@ -270,8 +271,8 @@ void MotorService::_poll_measure_speed()
         // 电机位置变化时以 Teleplot 格式输出位置和速度信息
         if (enc_val != m_last_pos_pulse)
         {
-            Serial.printf(">pos: %ld\n", enc_val);
-            Serial.printf(">speed: %.3f\n", m_last_speed_pulse);
+            LoggerService::printf(">pos: %ld\n", enc_val);
+            LoggerService::printf(">speed: %.3f\n", m_last_speed_pulse);
         }
 
         // 更新上一次的编码器位置和时间

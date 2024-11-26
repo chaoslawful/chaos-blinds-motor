@@ -1,4 +1,5 @@
-#include "ir.h"
+#include "service/ir.h"
+#include "service/logger.h"
 
 #include <Arduino.h>
 // 不使用 LED_BUILTIN 反馈接收数据
@@ -29,9 +30,9 @@ void IRService::begin()
     // 初始化红外接收模块
     if (!initPCIInterruptForTinyReceiver())
     {
-        Serial.printf("No interrupt available for pin %d\n", IR_RECEIVE_PIN);
+        LoggerService::printf("No interrupt available for pin %d\n", IR_RECEIVE_PIN);
     }
-    Serial.printf("Ready to receive NEC IR signals at pin %d\n", IR_RECEIVE_PIN);
+    LoggerService::printf("Ready to receive NEC IR signals at pin %d\n", IR_RECEIVE_PIN);
 }
 
 void IRService::update()

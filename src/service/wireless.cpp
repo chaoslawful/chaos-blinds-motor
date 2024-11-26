@@ -1,4 +1,5 @@
 #include "service/wireless.h"
+#include "service/logger.h"
 
 #include <LittleFS.h>
 #include <Arduino.h>
@@ -68,7 +69,7 @@ void WirelessService::setup_wifi_()
     wm.setSaveConfigCallback(
         [=]()
         {
-            Serial.println("Should save MQTT config");
+            LoggerService::println("Should save MQTT config");
             this->m_should_save_config = true;
         });
     wm.addParameter(&custom_mqtt_server);
@@ -79,28 +80,28 @@ void WirelessService::setup_wifi_()
     bool res = wm.autoConnect();
     if (!res)
     {
-        Serial.println("Failed to connect to WiFi, rebooting...");
+        LoggerService::println("Failed to connect to WiFi, rebooting...");
         delay(DEF_FAIL_REBOOT_DELAY);
         ESP.restart();
     }
-    Serial.println("Connected to WiFi, local IP & MAC:");
-    Serial.println(WiFi.localIP());
-    Serial.println(WiFi.macAddress());
+    LoggerService::println("Connected to WiFi, local IP & MAC:");
+    LoggerService::println(WiFi.localIP());
+    LoggerService::println(WiFi.macAddress());
 
     strcpy(this->m_mqtt_server, custom_mqtt_server.getValue());
     strcpy(this->m_mqtt_port, custom_mqtt_port.getValue());
     strcpy(this->m_mqtt_user, custom_mqtt_user.getValue());
     strcpy(this->m_mqtt_pass, custom_mqtt_pass.getValue());
 
-    Serial.println("MQTT info:");
-    Serial.println("Server: " + String(this->m_mqtt_server));
-    Serial.println("Port: " + String(this->m_mqtt_port));
-    Serial.println("User: " + String(this->m_mqtt_user));
-    Serial.println("Pass: " + String(this->m_mqtt_pass));
+    LoggerService::println("MQTT info:");
+    LoggerService::println("Server: " + String(this->m_mqtt_server));
+    LoggerService::println("Port: " + String(this->m_mqtt_port));
+    LoggerService::println("User: " + String(this->m_mqtt_user));
+    LoggerService::println("Pass: " + String(this->m_mqtt_pass));
 
     if (this->m_should_save_config)
     {
-        Serial.println("Saving MQTT config ...");
+        LoggerService::println("Saving MQTT config ...");
         this->save_conf_();
     }
 }
@@ -127,33 +128,33 @@ void WirelessService::setup_ota_()
             // 卸载关闭文件系统以避免 OTA 更新时造成数据损失
             LittleFS.end();
 
-            Serial.println("Start updating " + type);
+            LoggerService::println("Start updating " + type);
         });
 
     ArduinoOTA.onEnd(
         []()
         {
-            Serial.println("\nEnd");
+            LoggerService::println("\nEnd");
         });
     ArduinoOTA.onProgress(
         [](unsigned int progress, unsigned int total)
         {
-            Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+            LoggerService::printf("Progress: %u%%\r", (progress / (total / 100)));
         });
     ArduinoOTA.onError(
         [](ota_error_t error)
         {
-            Serial.printf("Error[%u]: ", error);
+            LoggerService::printf("Error[%u]: ", error);
             if (error == OTA_AUTH_ERROR)
-                Serial.println("Auth Failed");
+                LoggerService::println("Auth Failed");
             else if (error == OTA_BEGIN_ERROR)
-                Serial.println("Begin Failed");
+                LoggerService::println("Begin Failed");
             else if (error == OTA_CONNECT_ERROR)
-                Serial.println("Connect Failed");
+                LoggerService::println("Connect Failed");
             else if (error == OTA_RECEIVE_ERROR)
-                Serial.println("Receive Failed");
+                LoggerService::println("Receive Failed");
             else if (error == OTA_END_ERROR)
-                Serial.println("End Failed");
+                LoggerService::println("End Failed");
         });
     ArduinoOTA.begin();
 }
@@ -166,11 +167,11 @@ void WirelessService::wait_check_clear_btn_()
     clear_btn.onPressed(
         [=]()
         {
-            Serial.println("Clear button activated, clear WiFi setting and rebooting...");
+            LoggerService::println("Clear button activated, clear WiFi setting and rebooting...");
             this->clear_settings_and_restart();
         });
 
-    Serial.printf("Press FLASH button to clear WiFi settings...\n");
+    LoggerService::printf("Press FLASH button to clear WiFi settings...\n");
 
     // 等待清除按钮按下并显示进度
     unsigned long clear_check_start = millis();
@@ -178,33 +179,33 @@ void WirelessService::wait_check_clear_btn_()
     {
         clear_btn.read();
         delay(5);
-        Serial.print(".");
+        LoggerService::print(".");
     }
-    Serial.println();
+    LoggerService::println();
 }
 
 void WirelessService::load_conf_()
 {
-    Serial.println("Mounting filesystem ...");
+    LoggerService::println("Mounting filesystem ...");
     if (LittleFS.begin())
     {
-        Serial.println("Filesystem mounted.");
+        LoggerService::println("Filesystem mounted.");
 
         if (LittleFS.exists(MQTT_CONF_FILE))
         {
             // MQTT 配置文件已存在, 读入其数据
-            Serial.println("Reading MQTT conf file " + String(MQTT_CONF_FILE) + " ...");
+            LoggerService::println("Reading MQTT conf file " + String(MQTT_CONF_FILE) + " ...");
             File conf_file = LittleFS.open(MQTT_CONF_FILE, "r");
             if (conf_file)
             {
-                Serial.println("Opened config file");
+                LoggerService::println("Opened config file");
 
                 // 解析 JSON 数据
                 JsonDocument doc;
                 auto err = deserializeJson(doc, conf_file);
                 if (!err)
                 {
-                    Serial.println("Parsed JSON data");
+                    LoggerService::println("Parsed JSON data");
                     strcpy(this->m_mqtt_server, doc["mqtt_server"]);
                     strcpy(this->m_mqtt_port, doc["mqtt_port"]);
                     strcpy(this->m_mqtt_user, doc["mqtt_user"]);
@@ -212,8 +213,7 @@ void WirelessService::load_conf_()
                 }
                 else
                 {
-                    Serial.println("Failed to load JSON config data:");
-                    Serial.println(err.c_str());
+                    LoggerService::printf("Failed to load JSON config data: %s\n", err.c_str());
                 }
 
                 conf_file.close();
@@ -222,7 +222,7 @@ void WirelessService::load_conf_()
     }
     else
     {
-        Serial.println("Failed to mount filesystem.");
+        LoggerService::println("Failed to mount filesystem.");
     }
 }
 
@@ -239,18 +239,18 @@ void WirelessService::save_conf_()
         File conf_file = LittleFS.open(MQTT_CONF_FILE, "w");
         if (!conf_file)
         {
-            Serial.println("Failed to open config file for writing: " + String(MQTT_CONF_FILE));
+            LoggerService::println("Failed to open config file for writing: " + String(MQTT_CONF_FILE));
             return;
         }
 
         serializeJson(doc, conf_file);
         serializeJson(doc, Serial);
-        Serial.println();
+        LoggerService::println();
 
         conf_file.close();
     }
     else
     {
-        Serial.println("Failed to mount filesystem.");
+        LoggerService::println("Failed to mount filesystem.");
     }
 }
