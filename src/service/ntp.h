@@ -8,7 +8,7 @@
 class NTPService
 {
 public:
-    static constexpr int NTP_UPDATE_INTERVAL = 3600 * 24; // 每天同步一次
+    static constexpr int NTP_UPDATE_INTERVAL = 3600; // 每小时同步一次
     static constexpr const char *NTP_SERVER = "pool.ntp.org";
     static constexpr const long NTP_GMT_OFFSET = 8 * 3600; // 时区: UTC+8
 
