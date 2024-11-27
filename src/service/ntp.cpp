@@ -18,14 +18,17 @@ void NTPService::begin()
 {
     m_time_client->begin();
     LoggerService::println("NTP service started.");
+    LoggerService::printf("NTP server: %s, GMT offset: %ld, Sync interval: %ld\n", NTP_SERVER, NTP_GMT_OFFSET, NTP_UPDATE_INTERVAL);
+
+    sync_time_();
 }
 
 void NTPService::update()
 {
     time_t now = time(nullptr);
-    if (now - m_last_sync_ts > NTP_UPDATE_INTERVAL)
+    if (now > m_last_sync_ts + NTP_UPDATE_INTERVAL)
     {
-        LoggerService::printf("Now: %ld, Last sync: %ld, Sync interval: %d\n", now, m_last_sync_ts, NTP_UPDATE_INTERVAL);
+        LoggerService::printf("Now: %ld, Last sync: %ld\n", now, m_last_sync_ts);
         LoggerService::println("Sync time with NTP server...");
         sync_time_();
         m_last_sync_ts = now;
