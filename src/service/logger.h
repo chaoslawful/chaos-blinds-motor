@@ -66,9 +66,10 @@ public:
     String get_log_buf() const { return m_log_buf; }
 
 protected:
+    friend void handle_web_log();
+
     LoggerService();
 
-    void handle_web_log_();
     String get_cur_ts_str_();
 
     static LoggerService *m_instance;

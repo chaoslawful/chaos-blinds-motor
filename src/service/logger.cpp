@@ -11,11 +11,16 @@ LoggerService::~LoggerService()
     delete m_log_server;
 }
 
+void handle_web_log()
+{
+    auto logger = LoggerService::get_instance();
+    logger->m_log_server->send(200, "text/plain", logger->m_log_buf);
+}
+
 void LoggerService::begin()
 {
     m_log_server = new ESP8266WebServer(WEB_LOG_PORT);
-    m_log_server->on("/", [=]()
-                     { this->handle_web_log_(); });
+    m_log_server->on("/", handle_web_log);
     m_log_server->begin();
     LoggerService::printf("HTTP server started on port %d.\n", WEB_LOG_PORT);
 }
@@ -45,9 +50,4 @@ void LoggerService::log(const String &msg, bool eol)
     }
 
     Serial.print(msg + eol_mark);
-}
-
-void LoggerService::handle_web_log_()
-{
-    m_log_server->send(200, "text/plain", m_log_buf);
 }
