@@ -11,7 +11,7 @@ void setup()
 {
   // 初始化串口
   Serial.begin(115200);
-  LoggerService::println("\nReset reason: " + ESP.getResetReason());
+  LoggerService::println("Reset reason: " + ESP.getResetReason());
 
   // 初始化 WiFi
   WirelessService *wireless_service = WirelessService::get_instance();

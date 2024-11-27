@@ -7,7 +7,7 @@
 class LoggerService
 {
 public:
-    static constexpr int LOG_BUF_SIZE = 2048;
+    static constexpr int LOG_BUF_SIZE = 4096;
     static constexpr int WEB_LOG_PORT = 8080;
 
     static LoggerService *get_instance()

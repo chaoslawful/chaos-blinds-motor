@@ -18,8 +18,6 @@ void NTPService::begin()
 {
     m_time_client->begin();
     LoggerService::println("NTP service started.");
-
-    sync_time_();
 }
 
 void NTPService::update()
