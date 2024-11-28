@@ -32,8 +32,8 @@ void LoggerService::update()
 
 String LoggerService::get_cur_ts_str_()
 {
-    time_t now = time(nullptr);
-    struct tm *timeinfo = localtime(&now);
+    time_t cur_ts = time(nullptr);
+    struct tm *timeinfo = localtime(&cur_ts);
     char buf[32];
     strftime(buf, sizeof(buf), "%Y-%m-%d %H:%M:%S", timeinfo);
     return String(buf);

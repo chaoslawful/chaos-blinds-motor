@@ -1,3 +1,4 @@
+#include <stdint.h>
 #include "service/ntp.h"
 #include "service/logger.h"
 
@@ -23,15 +24,14 @@ void NTPService::begin()
     sync_time_();
 }
 
-void NTPService::update()
+void NTPService::update(bool force)
 {
-    time_t now = time(nullptr);
-    if (now > m_last_sync_ts + NTP_UPDATE_INTERVAL)
+    time_t cur_ts = time(nullptr);
+    if (force || cur_ts > m_last_sync_ts + NTP_UPDATE_INTERVAL)
     {
-        LoggerService::printf("Now: %ld, Last sync: %ld\n", now, m_last_sync_ts);
+        LoggerService::printf("Now: %lld, Last sync: %lld, Diff: %lld\n", (int64_t)cur_ts, (int64_t)m_last_sync_ts, (int64_t)cur_ts - (int64_t)m_last_sync_ts);
         LoggerService::println("Sync time with NTP server...");
         sync_time_();
-        m_last_sync_ts = now;
     }
 }
 

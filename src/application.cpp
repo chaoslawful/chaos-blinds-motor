@@ -2,6 +2,7 @@
 #include "service/motor.h"
 #include "service/ir.h"
 #include "service/logger.h"
+#include "service/ntp.h"
 #include "application.h"
 
 #include <LittleFS.h>
@@ -318,6 +319,18 @@ void Application::on_ir_key_(IRKey key)
         else
         {
             LoggerService::println("IR remote: Blinds mark full close position failed, wrong key sequence");
+        }
+        break;
+    case KEY_4: // 手动触发同步 NTP 时间
+        if (app->m_last_ir_key == KEY_0 && app->m_last_ir_key_pos == cur_pos)
+        {
+            // 顺序按下 0、4 键，手动触发同步 NTP 时间
+            LoggerService::println("IR remote: Manually sync NTP time");
+            NTPService::get_instance()->update(true);
+        }
+        else
+        {
+            LoggerService::println("IR remote: Manually sync NTP time failed, wrong key sequence");
         }
         break;
     case KEY_0: // 功能键序列开始

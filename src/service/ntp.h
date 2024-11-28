@@ -24,7 +24,7 @@ public:
     ~NTPService();
 
     void begin();
-    void update();
+    void update(bool force = false);
 
 protected:
     NTPService();
