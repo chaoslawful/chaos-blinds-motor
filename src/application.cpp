@@ -154,9 +154,9 @@ void Application::save_motor_conf_()
 
         serializeJson(doc, conf_file);
         serializeJson(doc, Serial);
-        LoggerService::println();
-
         conf_file.close();
+
+        LoggerService::println("Motor state saved to " + String(MOTOR_CONF_FILE));
     }
     else
     {
