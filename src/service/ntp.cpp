@@ -38,7 +38,12 @@ void NTPService::update(bool force)
 void NTPService::sync_time_()
 {
     // 同步时间
-    m_time_client->update();
+    if (!m_time_client->update())
+    {
+        LoggerService::println("NTP sync failed.");
+        return;
+    }
+
     time_t ts = m_time_client->getEpochTime();
 
     // 设置系统时间

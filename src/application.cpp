@@ -69,12 +69,12 @@ void Application::begin()
 
     m_btn_close.setName("关闭");
     m_btn_close.setIcon("mdi:arrow-down");
-    m_btn_open.setRetain(false);
+    m_btn_close.setRetain(false);
     m_btn_close.onCommand(&Application::on_cover_command_);
 
     m_btn_stop.setName("停止");
     m_btn_stop.setIcon("mdi:stop");
-    m_btn_open.setRetain(false);
+    m_btn_stop.setRetain(false);
     m_btn_stop.onCommand(&Application::on_cover_command_);
 
     m_sensor_motor.setName("电机状态");

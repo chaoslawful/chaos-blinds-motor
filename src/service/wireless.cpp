@@ -139,7 +139,8 @@ void WirelessService::setup_ota_()
     ArduinoOTA.onProgress(
         [](unsigned int progress, unsigned int total)
         {
-            LoggerService::printf("Progress: %u%%\r", (progress / (total / 100)));
+            unsigned int pct = (total > 0) ? (progress * 100 / total) : 0;
+            LoggerService::printf("Progress: %u%%\r", pct);
         });
     ArduinoOTA.onError(
         [](ota_error_t error)

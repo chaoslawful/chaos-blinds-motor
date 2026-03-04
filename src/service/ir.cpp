@@ -19,8 +19,6 @@ IRService::IRService()
 IRService::~IRService()
 {
     digitalWrite(IR_RECEIVE_PWR, LOW); // 关闭红外接收模块
-
-    delete m_instance;
 }
 
 void IRService::begin()

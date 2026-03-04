@@ -97,7 +97,6 @@ void MotorService::stop()
 {
     if (!m_motor_reached_stable)
     {
-        m_motor_reached_stable = false;
         this->_disable_pid();
         this->motor_brake();
     }
@@ -258,12 +257,13 @@ void MotorService::_poll_measure_speed()
     long enc_diff = enc_val - m_last_pos_pulse;
 
     // 当编码器位置变化超过阈值(适应高转速情况)或者采样间隔超过阈值(适应低转速情况)时更新电机速度
-    if (abs(enc_diff) > SPEED_PULSE_THRESHOLD || cur_ms - m_last_enc_read_ms > SPEED_INTERVAL_THRESHOLD)
+    unsigned long dt_ms = cur_ms - m_last_enc_read_ms;
+    if (abs(enc_diff) > SPEED_PULSE_THRESHOLD || dt_ms > SPEED_INTERVAL_THRESHOLD)
     {
-        m_last_enc_read_ms = cur_ms;
-
         // 计算电机速度 (pulse/s)
-        float speed = (double)enc_diff / (cur_ms - m_last_enc_read_ms + 1) * 1000;
+        float speed = (dt_ms > 0) ? ((float)enc_diff * 1000.0f / dt_ms) : 0.0f;
+
+        m_last_enc_read_ms = cur_ms;
 
         // 指数移动平均更新上次电机速度
         m_last_speed_pulse = (1 - speed_ema_alpha) * m_last_speed_pulse + speed_ema_alpha * speed;
@@ -275,7 +275,7 @@ void MotorService::_poll_measure_speed()
             LoggerService::printf(">speed: %.3f\n", m_last_speed_pulse);
         }
 
-        // 更新上一次的编码器位置和时间
+        // 更新上一次的编码器位置
         m_last_pos_pulse = enc_val;
     }
 }
