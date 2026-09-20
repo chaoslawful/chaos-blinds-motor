@@ -66,7 +66,7 @@ esphome run chaos-blinds-motor.yaml --device <设备IP>
 | 0,# | 切换电机转向 |
 | 0,4 | 手动对时（本版 SNTP 自动对时，此键仅打日志） |
 
-Home Assistant 侧提供等价能力：原生 **Cover 实体**（开/关/停/任意位置百分比 + 位置反馈）、标定按钮三个、转向反转开关、WiFi 信号/运行时长传感器。
+Home Assistant 侧提供等价能力：原生 **Cover 实体**（开/关/停/任意位置百分比 + 位置反馈）、标定按钮三个、手动点动按钮三个（Jog Open / Jog Close / Jog Stop，与红外 ← → OK 等价，全速运转直到判稳停、60s 硬超时或手动停止）、转向反转开关、WiFi 信号/运行时长传感器。
 
 ## 与原版差异（有意为之的改动）
 
