@@ -103,26 +103,29 @@ external_components:
 # ================================================================
 # 电机 Cover（自写组件 motor_pid，HA 中呈现为原生 Cover 实体，
 # 支持 open / close / stop / set_position 与位置百分比反馈）
+# 注意：必须以 cover 平台方式注册，顶层 motor_pid: 域不会把 cover
+# 组件源码加入编译（USE_COVER 已定义但 cover.h 缺失，编译失败）
 # ================================================================
-motor_pid:
-  id: motor_cover
-  name: "百叶窗"
-  in1_pin: ${drv_in1_pin}
-  in2_pin: ${drv_in2_pin}
-  sleep_pin: ${drv_eep_pin}
-  encoder_a_pin: ${enc_a_pin}
-  encoder_b_pin: ${enc_b_pin}
-  # 控制参数与原版 src/service/motor.h 默认值一致
-  kp: 2.0
-  ki: 0.2
-  kd: 0.12
-  sample_time: 5ms
-  stable_samples: 20
-  stable_window: 50ms
-  abs_tolerance: 80.0
-  rel_tolerance: 0.01
-  max_run_time: 60s        # 新增安全兜底：运动硬超时
-  pwm_frequency: 20kHz     # 原版 128Hz 有可闻啸叫；要完全一致可改回 128Hz
+cover:
+  - platform: motor_pid
+    id: motor_cover
+    name: "百叶窗"
+    in1_pin: ${drv_in1_pin}
+    in2_pin: ${drv_in2_pin}
+    sleep_pin: ${drv_eep_pin}
+    encoder_a_pin: ${enc_a_pin}
+    encoder_b_pin: ${enc_b_pin}
+    # 控制参数与原版 src/service/motor.h 默认值一致
+    kp: 2.0
+    ki: 0.2
+    kd: 0.12
+    sample_time: 5ms
+    stable_samples: 20
+    stable_window: 50ms
+    abs_tolerance: 80.0
+    rel_tolerance: 0.01
+    max_run_time: 60s        # 新增安全兜底：运动硬超时
+    pwm_frequency: 20kHz     # 原版 128Hz 有可闻啸叫；要完全一致可改回 128Hz
 
 # ================================================================
 # 红外遥控（NEC 协议 17 键，键码与原版 src/service/ir.h 一致）
