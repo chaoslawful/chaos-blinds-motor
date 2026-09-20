@@ -34,7 +34,7 @@ In Visual Studio Code:
 
 1. Install the PlatformIO IDE plugin.
 
-2. Open the repository directory. By default, it uploads via USB serial. If you want to use ArduinoOTA wireless upload, uncomment the relevant settings in `platformio.ini`.
+2. Open the `arduino/` subdirectory as the PlatformIO project (the legacy Arduino firmware now lives there; the ESPHome reimplementation is in `esphome/`). By default, it uploads via USB serial. If you want to use ArduinoOTA wireless upload, uncomment the relevant settings in `arduino/platformio.ini`.
 
 3. Use the PlatformIO Upload command (default shortcut `Ctrl+Alt+U`) to compile and upload the firmware code.
 

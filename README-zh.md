@@ -34,7 +34,7 @@
 
 1. 安装 PlatformIO IDE 插件
 
-2. 打开仓库目录，默认为 USB 串口上传，如需使用 ArduinoOTA 无线上传请修改 platformio.ini 解开相关设置前的注释
+2. 打开 `arduino/` 子目录作为 PlatformIO 工程（旧版 Arduino 固件已迁移至此，ESPHome 重构版在 `esphome/` 目录），默认为 USB 串口上传，如需使用 ArduinoOTA 无线上传请修改 `arduino/platformio.ini` 解开相关设置前的注释
 
 3. 使用 PlatformIO 的 Upload 命令（默认快捷键 `Ctrl+Alt+U`）编译上传固件代码
 
