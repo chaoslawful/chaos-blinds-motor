@@ -79,6 +79,7 @@ logger:
 web_server:
   port: 80
   auth:
+    type: digest
     username: !secret web_user
     password: !secret web_password
 
@@ -207,21 +208,26 @@ remote_receiver:
 # ================================================================
 
 # 标定与维护按钮（与红外组合键等价的 HA 通道）
+# 名称含 ASCII 字符以通过实体唯一性校验（纯中文等长名会转出相同 slug）
 button:
   - platform: restart
-    name: "重启升窗器"
+    id: btn_restart
+    name: "Restart"
   - platform: template
-    name: "标定全开位置"
+    id: btn_calibrate_open
+    name: "Calibrate Open"
     icon: mdi:arrow-up-bold-circle-outline
     on_press:
       - lambda: 'id(motor_cover).mark_open_here();'
   - platform: template
-    name: "标定全关位置"
+    id: btn_calibrate_close
+    name: "Calibrate Close"
     icon: mdi:arrow-down-bold-circle-outline
     on_press:
       - lambda: 'id(motor_cover).mark_close_here();'
   - platform: template
-    name: "清除标定"
+    id: btn_calibrate_clear
+    name: "Clear Calibration"
     icon: mdi:eraser
     on_press:
       - lambda: 'id(motor_cover).clear_calibration();'
@@ -229,7 +235,8 @@ button:
 # 电机转向开关（状态实时取自组件，红外切换后 HA 侧同步）
 switch:
   - platform: template
-    name: "电机转向反转"
+    id: sw_motor_reverse
+    name: "Motor Reverse"
     icon: mdi:swap-horizontal
     lambda: 'return id(motor_cover).get_reverse();'
     turn_on_action:
@@ -240,9 +247,11 @@ switch:
 # 传感器
 sensor:
   - platform: wifi_signal
-    name: "WiFi 信号"
+    id: sensor_wifi_signal
+    name: "WiFi Signal"
     update_interval: 60s
 
   - platform: uptime
-    name: "运行时长"
+    id: sensor_uptime
+    name: "Uptime"
     update_interval: 60s
