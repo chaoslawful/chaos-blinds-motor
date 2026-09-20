@@ -137,7 +137,8 @@ cover:
 remote_receiver:
   pin:
     number: ${ir_pin}
-    inverted: false
+    # 红外接收头（HX1838）空闲高、载波低，解码器需反相逻辑（官方文档要求）
+    inverted: true
     mode:
       input: true
   tolerance: 50%
@@ -145,11 +146,11 @@ remote_receiver:
   on_nec:
     then:
       - lambda: |-
-          // 按键去抖（100ms，与原版一致）
+          // 按键去抖（200ms：NEC 长按重复帧间隔约 110ms，须大于它才能滤除重复帧）
           static uint32_t last_ms = 0;
           static int prev_key = -1;
           static long prev_pos = 0;
-          if (millis() - last_ms < 100) return;
+          if (millis() - last_ms < 200) return;
           last_ms = millis();
 
           uint8_t cmd = x.command;
@@ -235,6 +236,26 @@ button:
     icon: mdi:eraser
     on_press:
       - lambda: 'id(motor_cover).clear_calibration();'
+
+  # 手动点动（全速运转直到判稳/超时/停止，与红外 ← → 等价；Cover 协议无 jog 语义，故做成按钮）
+  - platform: template
+    id: btn_jog_open
+    name: "Jog Open"
+    icon: mdi:arrow-left-bold-box-outline
+    on_press:
+      - lambda: 'id(motor_cover).manual_open();'
+  - platform: template
+    id: btn_jog_close
+    name: "Jog Close"
+    icon: mdi:arrow-right-bold-box-outline
+    on_press:
+      - lambda: 'id(motor_cover).manual_close();'
+  - platform: template
+    id: btn_jog_stop
+    name: "Jog Stop"
+    icon: mdi:stop-circle-outline
+    on_press:
+      - lambda: 'id(motor_cover).stop_motor();'
 
 # 电机转向开关（状态实时取自组件，红外切换后 HA 侧同步）
 switch:
