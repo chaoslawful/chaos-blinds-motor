@@ -31,7 +31,7 @@ protected:
 
     static NTPService *m_instance;
 
-    void sync_time_();
+    bool sync_time_();  // 返回 true 表示同步成功，false 表示失败
 
     WiFiUDP m_udp;
     NTPClient *m_time_client;

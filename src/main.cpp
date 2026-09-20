@@ -6,12 +6,23 @@
 #include "application.h"
 
 #include <Arduino.h>
+#include <LittleFS.h>
 
 void setup()
 {
   // 初始化串口
   Serial.begin(115200);
   LoggerService::println("Reset reason: " + ESP.getResetReason());
+
+  // 初始化文件系统（仅一次）
+  if (!LittleFS.begin())
+  {
+    LoggerService::println("Failed to mount filesystem!");
+  }
+  else
+  {
+    LoggerService::println("Filesystem mounted.");
+  }
 
   // 初始化 WiFi
   WirelessService *wireless_service = WirelessService::get_instance();

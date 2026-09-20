@@ -187,43 +187,35 @@ void WirelessService::wait_check_clear_btn_()
 
 void WirelessService::load_conf_()
 {
-    LoggerService::println("Mounting filesystem ...");
-    if (LittleFS.begin())
-    {
-        LoggerService::println("Filesystem mounted.");
+    LoggerService::println("Loading MQTT configuration...");
 
-        if (LittleFS.exists(MQTT_CONF_FILE))
+    if (LittleFS.exists(MQTT_CONF_FILE))
+    {
+        // MQTT 配置文件已存在, 读入其数据
+        LoggerService::println("Reading MQTT conf file " + String(MQTT_CONF_FILE) + " ...");
+        File conf_file = LittleFS.open(MQTT_CONF_FILE, "r");
+        if (conf_file)
         {
-            // MQTT 配置文件已存在, 读入其数据
-            LoggerService::println("Reading MQTT conf file " + String(MQTT_CONF_FILE) + " ...");
-            File conf_file = LittleFS.open(MQTT_CONF_FILE, "r");
-            if (conf_file)
+            LoggerService::println("Opened config file");
+
+            // 解析 JSON 数据
+            JsonDocument doc;
+            auto err = deserializeJson(doc, conf_file);
+            if (!err)
             {
-                LoggerService::println("Opened config file");
-
-                // 解析 JSON 数据
-                JsonDocument doc;
-                auto err = deserializeJson(doc, conf_file);
-                if (!err)
-                {
-                    LoggerService::println("Parsed JSON data");
-                    strcpy(this->m_mqtt_server, doc["mqtt_server"]);
-                    strcpy(this->m_mqtt_port, doc["mqtt_port"]);
-                    strcpy(this->m_mqtt_user, doc["mqtt_user"]);
-                    strcpy(this->m_mqtt_pass, doc["mqtt_pass"]);
-                }
-                else
-                {
-                    LoggerService::printf("Failed to load JSON config data: %s\n", err.c_str());
-                }
-
-                conf_file.close();
+                LoggerService::println("Parsed JSON data");
+                strcpy(this->m_mqtt_server, doc["mqtt_server"]);
+                strcpy(this->m_mqtt_port, doc["mqtt_port"]);
+                strcpy(this->m_mqtt_user, doc["mqtt_user"]);
+                strcpy(this->m_mqtt_pass, doc["mqtt_pass"]);
             }
+            else
+            {
+                LoggerService::printf("Failed to load JSON config data: %s\n", err.c_str());
+            }
+
+            conf_file.close();
         }
-    }
-    else
-    {
-        LoggerService::println("Failed to mount filesystem.");
     }
 }
 
@@ -235,23 +227,16 @@ void WirelessService::save_conf_()
     doc["mqtt_user"] = this->m_mqtt_user;
     doc["mqtt_pass"] = this->m_mqtt_pass;
 
-    if (LittleFS.begin())
+    File conf_file = LittleFS.open(MQTT_CONF_FILE, "w");
+    if (!conf_file)
     {
-        File conf_file = LittleFS.open(MQTT_CONF_FILE, "w");
-        if (!conf_file)
-        {
-            LoggerService::println("Failed to open config file for writing: " + String(MQTT_CONF_FILE));
-            return;
-        }
-
-        serializeJson(doc, conf_file);
-        serializeJson(doc, Serial);
-        LoggerService::println();
-
-        conf_file.close();
+        LoggerService::println("Failed to open config file for writing: " + String(MQTT_CONF_FILE));
+        return;
     }
-    else
-    {
-        LoggerService::println("Failed to mount filesystem.");
-    }
+
+    serializeJson(doc, conf_file);
+    serializeJson(doc, Serial);
+    LoggerService::println();
+
+    conf_file.close();
 }

@@ -100,68 +100,54 @@ void Application::update()
 
 void Application::load_motor_conf_()
 {
-    if (LittleFS.begin())
+    if (LittleFS.exists(MOTOR_CONF_FILE))
     {
-        if (LittleFS.exists(MOTOR_CONF_FILE))
+        File conf_file = LittleFS.open(MOTOR_CONF_FILE, "r");
+        if (conf_file)
         {
-            File conf_file = LittleFS.open(MOTOR_CONF_FILE, "r");
-            if (conf_file)
+            JsonDocument doc;
+            auto err = deserializeJson(doc, conf_file);
+            if (!err)
             {
-                JsonDocument doc;
-                auto err = deserializeJson(doc, conf_file);
-                if (!err)
-                {
-                    this->m_cover_full_close_pos = doc["full_close_pos"];
-                    this->m_cover_full_open_pos = doc["full_open_pos"];
-                    this->m_cover_current_pos = doc["current_pos"];
-                    // 未设置 reversed 键时默认电机转向为正向
-                    this->m_motor_reversed = doc["reversed"] | false;
-                }
-                else
-                {
-                    LoggerService::printf("Failed to parse motor config file: %s\n", err.c_str());
-                }
-                conf_file.close();
+                this->m_cover_full_close_pos = doc["full_close_pos"];
+                this->m_cover_full_open_pos = doc["full_open_pos"];
+                this->m_cover_current_pos = doc["current_pos"];
+                // 未设置 reversed 键时默认电机转向为正向
+                this->m_motor_reversed = doc["reversed"] | false;
             }
-        }
-        else
-        {
-            LoggerService::println("Motor config file " + String(MOTOR_CONF_FILE) + " not found, using default values.");
+            else
+            {
+                LoggerService::printf("Failed to parse motor config file: %s\n", err.c_str());
+            }
+            conf_file.close();
         }
     }
     else
     {
-        LoggerService::println("Failed to open filesystem!");
+        LoggerService::println("Motor config file " + String(MOTOR_CONF_FILE) + " not found, using default values.");
     }
 }
 
 void Application::save_motor_conf_()
 {
-    if (LittleFS.begin())
+    JsonDocument doc;
+    doc["full_close_pos"] = this->m_cover_full_close_pos;
+    doc["full_open_pos"] = this->m_cover_full_open_pos;
+    doc["current_pos"] = this->m_cover_current_pos;
+    doc["reversed"] = this->m_motor_reversed;
+
+    File conf_file = LittleFS.open(MOTOR_CONF_FILE, "w");
+    if (!conf_file)
     {
-        JsonDocument doc;
-        doc["full_close_pos"] = this->m_cover_full_close_pos;
-        doc["full_open_pos"] = this->m_cover_full_open_pos;
-        doc["current_pos"] = this->m_cover_current_pos;
-        doc["reversed"] = this->m_motor_reversed;
-
-        File conf_file = LittleFS.open(MOTOR_CONF_FILE, "w");
-        if (!conf_file)
-        {
-            LoggerService::println("Failed to open motor config file for writing: " + String(MOTOR_CONF_FILE));
-            return;
-        }
-
-        serializeJson(doc, conf_file);
-        serializeJson(doc, Serial);
-        conf_file.close();
-
-        LoggerService::println("Motor state saved to " + String(MOTOR_CONF_FILE));
+        LoggerService::println("Failed to open motor config file for writing: " + String(MOTOR_CONF_FILE));
+        return;
     }
-    else
-    {
-        LoggerService::println("Failed to open filesystem!");
-    }
+
+    serializeJson(doc, conf_file);
+    serializeJson(doc, Serial);
+    conf_file.close();
+
+    LoggerService::println("Motor state saved to " + String(MOTOR_CONF_FILE));
 }
 
 void Application::on_motor_stop_(long cur_pos)

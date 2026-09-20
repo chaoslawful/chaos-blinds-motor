@@ -95,11 +95,9 @@ void MotorService::backward(int pwm)
 
 void MotorService::stop()
 {
-    if (!m_motor_reached_stable)
-    {
-        this->_disable_pid();
-        this->motor_brake();
-    }
+    // 无论当前状态如何，都强制停止电机
+    this->_disable_pid();
+    this->motor_brake();
 }
 
 void MotorService::motor_run(int pwm)
@@ -265,8 +263,16 @@ void MotorService::_poll_measure_speed()
 
         m_last_enc_read_ms = cur_ms;
 
-        // 指数移动平均更新上次电机速度
-        m_last_speed_pulse = (1 - speed_ema_alpha) * m_last_speed_pulse + speed_ema_alpha * speed;
+        // 如果编码器位置没有变化且采样间隔足够长，认为电机已停止，直接设置速度为0
+        if (enc_diff == 0 && dt_ms > SPEED_INTERVAL_THRESHOLD)
+        {
+            m_last_speed_pulse = 0.0f;
+        }
+        else
+        {
+            // 指数移动平均更新上次电机速度
+            m_last_speed_pulse = (1 - speed_ema_alpha) * m_last_speed_pulse + speed_ema_alpha * speed;
+        }
 
         // 电机位置变化时以 Teleplot 格式输出位置和速度信息
         if (enc_val != m_last_pos_pulse)
