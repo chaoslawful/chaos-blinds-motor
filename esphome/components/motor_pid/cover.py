@@ -3,6 +3,7 @@ import esphome.config_validation as cv
 from esphome import pins
 from esphome.components import cover
 from esphome.const import CONF_ID
+from esphome.core import CORE
 
 motor_pid_ns = cg.esphome_ns.namespace("motor_pid")
 MotorPIDCover = motor_pid_ns.class_("MotorPIDCover", cover.Cover, cg.Component)
@@ -55,6 +56,17 @@ async def to_code(config):
     var = cg.new_Pvariable(config[CONF_ID])
     await cg.register_component(var, config)
     await cover.register_cover(var, config)
+
+    # ESPHome 2026.1+ 默认排除 Arduino waveform/PWM 代码（省 flash/RAM），
+    # 使用 analogWrite 的外部组件必须显式声明需求，否则链接报
+    # undefined reference to `_setPWM' / `startWaveformClockCycles'
+    if CORE.is_esp8266:
+        try:
+            from esphome.components.esp8266.const import require_waveform
+
+            require_waveform()
+        except ImportError:
+            pass  # ESPHome < 2026.1.0 始终包含 waveform，无需处理
 
     for conf_key, setter in (
         (CONF_IN1_PIN, "set_in1_pin"),
