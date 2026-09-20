@@ -4,3 +4,9 @@
 .vscode/c_cpp_properties.json
 .vscode/launch.json
 .vscode/ipch
+
+# 凭据文件（含真实密码/API 密钥，绝不可入库）
+esphome/secrets.yaml
+
+# Python 缓存
+__pycache__/
