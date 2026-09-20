@@ -59,10 +59,11 @@ api:
     key: !secret api_encryption_key
   reboot_timeout: 5min
 
-# OTA（密码入 secrets，不再硬编码进固件）
+# OTA：改用 Noise 加密（继承 api 的 encryption key 认证上传者），
+# 替代初始迁移期临时使用的 password（迁移已完成，密码不再需要）
 ota:
   - platform: esphome
-    password: !secret ota_password
+    encryption:
 
 # 日志：编译期全局级别设为 VERBOSE（把组件内 Teleplot 位置/速度/PWM 调试输出编进固件），
 # 但 initial_level 保持 INFO 不影响日常性能；
