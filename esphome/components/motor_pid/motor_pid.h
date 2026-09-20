@@ -36,12 +36,12 @@ struct MotorState {
  */
 class MotorPIDCover : public cover::Cover, public Component {
  public:
-  // ---- 配置注入（由 __init__.py 代码生成调用）----
-  void set_in1_pin(GPIOPin *pin) { in1_ = pin; }
-  void set_in2_pin(GPIOPin *pin) { in2_ = pin; }
-  void set_sleep_pin(GPIOPin *pin) { sleep_ = pin; }
-  void set_encoder_a_pin(GPIOPin *pin) { enc_a_ = pin; }
-  void set_encoder_b_pin(GPIOPin *pin) { enc_b_ = pin; }
+  // ---- 配置注入（由 cover.py 代码生成调用，传入原始 GPIO 编号）----
+  void set_in1_pin(uint8_t pin) { in1_ = pin; }
+  void set_in2_pin(uint8_t pin) { in2_ = pin; }
+  void set_sleep_pin(uint8_t pin) { sleep_ = pin; }
+  void set_encoder_a_pin(uint8_t pin) { enc_a_ = pin; }
+  void set_encoder_b_pin(uint8_t pin) { enc_b_ = pin; }
   void set_pid(double kp, double ki, double kd) { kp_ = kp; ki_ = ki; kd_ = kd; }
   void set_sample_time_ms(uint32_t ms) { sample_time_ms_ = ms; }
   void set_stable_params(int samples, uint32_t window_ms) { stable_samples_ = samples; stable_window_ms_ = window_ms; }
@@ -93,14 +93,10 @@ class MotorPIDCover : public cover::Cover, public Component {
   bool is_close_(float val, float dst) const;
   void publish_position_();
   void save_state_();
-  bool load_state_();
+  bool load_state_(MotorState &st);
 
   // ---- 硬件 ----
-  GPIOPin *in1_{nullptr};
-  GPIOPin *in2_{nullptr};
-  GPIOPin *sleep_{nullptr};
-  GPIOPin *enc_a_{nullptr};
-  GPIOPin *enc_b_{nullptr};
+  uint8_t in1_{0}, in2_{0}, sleep_{0}, enc_a_{0}, enc_b_{0};
   Encoder *encoder_{nullptr};
 
   // ---- 配置 ----

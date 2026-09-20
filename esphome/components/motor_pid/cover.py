@@ -63,8 +63,8 @@ async def to_code(config):
         (CONF_ENC_A_PIN, "set_encoder_a_pin"),
         (CONF_ENC_B_PIN, "set_encoder_b_pin"),
     ):
-        pin = await cg.gpio_pin_expression(config[conf_key])
-        cg.add(getattr(var, setter)(pin))
+        # 传入原始 GPIO 编号（与原版 Arduino 代码一致直接操作硬件层）
+        cg.add(getattr(var, setter)(config[conf_key]["number"]))
 
     cg.add(var.set_pid(config[CONF_KP], config[CONF_KI], config[CONF_KD]))
     cg.add(var.set_sample_time_ms(config[CONF_SAMPLE_TIME].total_milliseconds))

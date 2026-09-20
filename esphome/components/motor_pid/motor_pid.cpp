@@ -13,19 +13,19 @@ static const int PWM_RANGE = 255;  // 与原版一致：analogWriteRange(255)
 // ------------------------------------------------------------------
 
 void MotorPIDCover::setup() {
-  // DRV8833 引脚初始化：默认停机 + 驱动模块休眠
-  in1_->setup();
-  in2_->setup();
-  sleep_->setup();
+  // DRV8833 引脚初始化：默认停机 + 驱动模块休眠（直接操作原始 GPIO，与原版一致）
+  pinMode(in1_, OUTPUT);
+  pinMode(in2_, OUTPUT);
+  pinMode(sleep_, OUTPUT);
 
   analogWriteRange(PWM_RANGE);
   analogWriteFreq(pwm_freq_);
-  analogWrite(in1_->get_pin(), 0);
-  analogWrite(in2_->get_pin(), 0);
-  sleep_->digital_write(false);
+  analogWrite(in1_, 0);
+  analogWrite(in2_, 0);
+  digitalWrite(sleep_, LOW);
 
   // 编码器（PJRC，中断驱动）
-  encoder_ = new Encoder(enc_a_->get_pin(), enc_b_->get_pin());
+  encoder_ = new Encoder(enc_a_, enc_b_);
 
   // 速度 EMA 滤波系数：α = 1 - e^(-T/τ)，τ = 1/(2π·fc)，T = 10ms（与原版一致）
   float tau = 1.0f / (2.0f * PI * speed_cutoff_hz_);
@@ -323,24 +323,24 @@ void MotorPIDCover::finish_move_(bool reached) {
 // ------------------------------------------------------------------
 
 void MotorPIDCover::motor_forward_(int pwm) {
-  sleep_->digital_write(true);
+  digitalWrite(sleep_, HIGH);
   if (reversed_) {
-    analogWrite(in1_->get_pin(), 0);
-    analogWrite(in2_->get_pin(), pwm);
+    analogWrite(in1_, 0);
+    analogWrite(in2_, pwm);
   } else {
-    analogWrite(in1_->get_pin(), pwm);
-    analogWrite(in2_->get_pin(), 0);
+    analogWrite(in1_, pwm);
+    analogWrite(in2_, 0);
   }
 }
 
 void MotorPIDCover::motor_backward_(int pwm) {
-  sleep_->digital_write(true);
+  digitalWrite(sleep_, HIGH);
   if (reversed_) {
-    analogWrite(in1_->get_pin(), pwm);
-    analogWrite(in2_->get_pin(), 0);
+    analogWrite(in1_, pwm);
+    analogWrite(in2_, 0);
   } else {
-    analogWrite(in1_->get_pin(), 0);
-    analogWrite(in2_->get_pin(), pwm);
+    analogWrite(in1_, 0);
+    analogWrite(in2_, pwm);
   }
 }
 
@@ -355,9 +355,9 @@ void MotorPIDCover::motor_run_(int pwm) {
 }
 
 void MotorPIDCover::motor_brake_() {
-  analogWrite(in1_->get_pin(), 0);
-  analogWrite(in2_->get_pin(), 0);
-  sleep_->digital_write(false);  // 停机即休眠驱动模块
+  analogWrite(in1_, 0);
+  analogWrite(in2_, 0);
+  digitalWrite(sleep_, LOW);  // 停机即休眠驱动模块
 }
 
 // ------------------------------------------------------------------
