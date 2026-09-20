@@ -1,6 +1,6 @@
 # 混沌猫升窗器 · ESPHome 版
 
-Arduino 版（`../arduino/`）的 ESPHome 重构实现，功能完全对齐，基础设施（WiFi/OTA/日志/持久化/看门狗）全部由 ESPHome 托管。重构动机与风险分析见 `../doc/架构评估与ESPHome重构方案.md`。
+原 Arduino 版（已从本仓库移除，历史提交中仍可查阅）的 ESPHome 重构实现，功能完全对齐，基础设施（WiFi/OTA/日志/持久化/看门狗）全部由 ESPHome 托管。
 
 ## 目录结构
 

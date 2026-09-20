@@ -30,13 +30,7 @@ The wiring diagram is as follows:
 
 ## Firmware Compilation and Upload
 
-In Visual Studio Code:
-
-1. Install the PlatformIO IDE plugin.
-
-2. Open the `arduino/` subdirectory as the PlatformIO project (the legacy Arduino firmware now lives there; the ESPHome reimplementation is in `esphome/`). By default, it uploads via USB serial. If you want to use ArduinoOTA wireless upload, uncomment the relevant settings in `arduino/platformio.ini`.
-
-3. Use the PlatformIO Upload command (default shortcut `Ctrl+Alt+U`) to compile and upload the firmware code.
+The firmware is now the ESPHome reimplementation in `esphome/` (the legacy Arduino implementation has been removed from the working tree; see the git history if you need it). Refer to `esphome/README.md` for build, first-flash and OTA instructions.
 
 ## Make outer casing
 
