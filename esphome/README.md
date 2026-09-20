@@ -1,6 +1,6 @@
 # 混沌猫升窗器 · ESPHome 版
 
-Arduino 版（`src/`）的 ESPHome 重构实现，功能完全对齐，基础设施（WiFi/OTA/日志/持久化/看门狗）全部由 ESPHome 托管。重构动机与风险分析见 `../doc/架构评估与ESPHome重构方案.md`。
+Arduino 版（`../arduino/`）的 ESPHome 重构实现，功能完全对齐，基础设施（WiFi/OTA/日志/持久化/看门狗）全部由 ESPHome 托管。重构动机与风险分析见 `../doc/架构评估与ESPHome重构方案.md`。
 
 ## 目录结构
 
@@ -26,9 +26,28 @@ cd esphome
 # 2. 校验配置
 esphome config chaos-blinds-motor.yaml
 
-# 3. 首次 USB 烧录（之后即可 OTA）
+# 3. 烧录（二选一，见下）
 esphome run chaos-blinds-motor.yaml
 ```
+
+### 首次烧录方式
+
+**方式 A：免拆机 OTA 迁移（推荐，设备仍在运行旧 Arduino 固件时）**
+
+ESPHome 的 OTA 与旧固件的 ArduinoOTA 使用同一协议（ESP8266 TCP 8266 端口），可直接无线推送，无需 USB：
+
+1. 先把 `secrets.yaml` 的 `ota_password` 填为 `chaos123456`（**必须与旧固件当前密码一致**，OTA 校验的是设备上正在运行的固件的密码）；
+2. 指定设备 IP 推送（旧固件 mDNS 主机名与新版不同，不要依赖自动发现）：
+
+```bash
+esphome run chaos-blinds-motor.yaml --device <设备IP>
+```
+
+3. 首次刷入成功后，之后的 OTA 密码以 `secrets.yaml` 为准，可改新密码。
+
+**方式 B：USB 烧录**
+
+`esphome run chaos-blinds-motor.yaml` 即可（自动检测串口）。
 
 烧录前建议先用 `esptool.py read_flash` 备份原版固件，以便随时回退（Arduino 版仓库保留即可）。
 
@@ -65,4 +84,9 @@ Home Assistant 侧提供等价能力：原生 **Cover 实体**（开/关/停/任
 
 ## PID 调试
 
-把 YAML 中 `logger.level` 临时改为 `VERBOSE`，串口日志即输出 Teleplot 格式的 `>pos:` / `>speed:` / `>pwm:` 数据流，与原版调试方式一致。
+固件已编译进 VERBOSE 级日志（`logger.level: VERBOSE` + `initial_level: INFO`），日常运行零开销。调试时无需改配置、无需重刷：
+
+- **Web 控制台**：日志级别下拉框切到 `VERBOSE`；
+- 或 `logger.set_level` 动作 / `esphome logs` 切换。
+
+随即输出 Teleplot 格式的 `>pos:` / `>speed:` / `>pwm:` 数据流，与原版串口调试方式一致；调完切回 `INFO` 即可。
