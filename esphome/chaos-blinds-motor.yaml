@@ -259,3 +259,10 @@ sensor:
     id: sensor_uptime
     name: "Uptime"
     update_interval: 60s
+
+# 日志级别选择器（网页与 HA 中均可在线切换，调 PID 时切 VERBOSE 即出 Teleplot 数据流）
+# 注意：可选范围受 logger.level（编译期 VERBOSE）限制，开机默认 INFO
+select:
+  - platform: logger
+    name: "Log Level"
+    icon: mdi:form-textbox
