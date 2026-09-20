@@ -1,0 +1,248 @@
+# ================================================================
+# 混沌猫升窗器 —— ESPHome 重构版
+# 目标硬件：NodeMCU Lolin V3 (ESP8266) + DRV8833 + 370 蜗轮减速电机
+#           （霍尔编码器 12PPR）+ HX1838 红外接收 + NEC 17 键遥控器
+# 功能与 Arduino 版完全对齐，差异详见 README.md「与原版差异」一节
+# ================================================================
+
+esphome:
+  name: chaos-blinds-motor
+  friendly_name: 混沌猫升窗器
+  comment: "基于 ESPHome 的百叶窗自动升窗器"
+  project:
+    name: chaos.blinds_motor
+    version: "2.0.0"
+  on_boot:
+    # 尽早使能编码器与红外接收头电源（对应原版构造函数中的 digitalWrite HIGH）
+    priority: 600
+    then:
+      - lambda: |-
+          pinMode(${enc_pwr_pin}, OUTPUT);
+          digitalWrite(${enc_pwr_pin}, HIGH);
+          pinMode(${ir_pwr_pin}, OUTPUT);
+          digitalWrite(${ir_pwr_pin}, HIGH);
+
+# ----------------------------------------------------------------
+# 引脚定义（与 src/config/pins.h 一一对应）
+# 注意：D3 在原版中被「FLASH 清配按钮」与「电机 IN1」双重占用（缺陷 R3），
+#       本版清配功能由 captive_portal 取代，D3 独占电机 PWM。
+# ----------------------------------------------------------------
+substitutions:
+  drv_in1_pin: D3    # DRV8833 输入 1（PWM）
+  drv_in2_pin: D4    # DRV8833 输入 2（PWM）
+  drv_eep_pin: D2    # DRV8833 使能（高电平工作，低电平休眠）
+  enc_a_pin: D6      # 编码器 A 相
+  enc_b_pin: D7      # 编码器 B 相
+  enc_pwr_pin: D8    # 编码器电源
+  ir_pin: D5         # 红外接收数据
+  ir_pwr_pin: D1     # 红外接收电源
+
+esp8266:
+  board: nodemcuv2
+  # 注：原版超频 160MHz 的配置 ESPHome 不支持；80MHz 下 5ms PID 环裕量充足，
+  #     实测 loop 耗时远低于采样周期，无功能影响。
+
+# WiFi：失败自动重连；连不上时开启回退 AP + 配网门户（取代 WiFiManager）
+wifi:
+  ssid: !secret wifi_ssid
+  password: !secret wifi_password
+  fast_connect: on
+  ap:
+    ssid: "Blinds-Motor Fallback"
+    password: !secret ap_password
+
+captive_portal:
+
+# HA 原生 API（加密；取代原版的 MQTT + ArduinoHA 通道）
+api:
+  encryption:
+    key: !secret api_encryption_key
+  reboot_timeout: 5min
+
+# OTA（密码入 secrets，不再硬编码进固件）
+ota:
+  - platform: esphome
+    password: !secret ota_password
+
+# 日志：编译期全局级别设为 VERBOSE（把组件内 Teleplot 位置/速度/PWM 调试输出编进固件），
+# 但 initial_level 保持 INFO 不影响日常性能；
+# 调试 PID 时无需重刷固件，网页控制台下拉框或 logger.set_level 直接切到 VERBOSE 即可
+logger:
+  level: VERBOSE
+  initial_level: INFO
+  logs:
+    wifi: ERROR
+    web_server: ERROR
+  baud_rate: 115200
+
+# Web 控制台（带鉴权；取代原版 8080 端口的无鉴权日志页，修复凭据泄露）
+web_server:
+  port: 80
+  auth:
+    username: !secret web_user
+    password: !secret web_password
+
+# 时间同步：SNTP 非阻塞（取代原版每小时阻塞式 NTP）
+time:
+  - platform: sntp
+    id: ntp_time
+    timezone: CST-8
+    servers:
+      - cn.pool.ntp.org
+      - ntp.aliyun.com
+    on_time_sync:
+      - logger.log: "Time synchronized via SNTP"
+
+# 本地外部组件：位置闭环 PID 电机 Cover
+external_components:
+  - source:
+      type: local
+      path: components
+
+# ================================================================
+# 电机 Cover（自写组件 motor_pid，HA 中呈现为原生 Cover 实体，
+# 支持 open / close / stop / set_position 与位置百分比反馈）
+# ================================================================
+motor_pid:
+  id: motor_cover
+  name: "百叶窗"
+  in1_pin: ${drv_in1_pin}
+  in2_pin: ${drv_in2_pin}
+  sleep_pin: ${drv_eep_pin}
+  encoder_a_pin: ${enc_a_pin}
+  encoder_b_pin: ${enc_b_pin}
+  # 控制参数与原版 src/service/motor.h 默认值一致
+  kp: 2.0
+  ki: 0.2
+  kd: 0.12
+  sample_time: 5ms
+  stable_samples: 20
+  stable_window: 50ms
+  abs_tolerance: 80.0
+  rel_tolerance: 0.01
+  max_run_time: 60s        # 新增安全兜底：运动硬超时
+  pwm_frequency: 20kHz     # 原版 128Hz 有可闻啸叫；要完全一致可改回 128Hz
+
+# ================================================================
+# 红外遥控（NEC 协议 17 键，键码与原版 src/service/ir.h 一致）
+# 组合键协议完全复刻：须先按 0 且位置未动，再按功能键
+#   0,1 标定全开位 | 0,3 标定全关位 | 0,2 清除标定
+#   0,# 切换电机转向 | 0,4 手动对时（本版 SNTP 自动对时，保留键位仅打日志）
+# ================================================================
+remote_receiver:
+  pin:
+    number: ${ir_pin}
+    inverted: false
+    mode:
+      input: true
+  tolerance: 50%
+  filter: 100us
+  on_nec:
+    then:
+      - lambda: |-
+          // 按键去抖（100ms，与原版一致）
+          static uint32_t last_ms = 0;
+          static int prev_key = -1;
+          static long prev_pos = 0;
+          if (millis() - last_ms < 100) return;
+          last_ms = millis();
+
+          uint8_t cmd = x.command;
+          long pos = id(motor_cover).get_pos_pulse();
+          bool seq = (prev_key == 0x19) && (prev_pos == pos);  // 「0 + 位置未动」前提
+
+          switch (cmd) {
+            case 0x08:  // LEFT：手动升起（CCW）
+              ESP_LOGI("ir", "Manual open");
+              id(motor_cover).manual_open();
+              break;
+            case 0x5A:  // RIGHT：手动放下（CW）
+              ESP_LOGI("ir", "Manual close");
+              id(motor_cover).manual_close();
+              break;
+            case 0x1C:  // OK：停止
+              ESP_LOGI("ir", "Stop");
+              id(motor_cover).stop_motor();
+              break;
+            case 0x18:  // UP：自动完全打开
+              ESP_LOGI("ir", "Auto open");
+              id(motor_cover).goto_open();
+              break;
+            case 0x52:  // DOWN：自动完全关闭
+              ESP_LOGI("ir", "Auto close");
+              id(motor_cover).goto_close();
+              break;
+            case 0x19:  // 0：功能键序列开始
+              ESP_LOGI("ir", "Function key sequence start");
+              break;
+            case 0x0D:  // #：0,# 切换电机转向
+              if (seq) { id(motor_cover).toggle_reverse(); }
+              else { ESP_LOGW("ir", "Toggle direction rejected: wrong key sequence"); }
+              break;
+            case 0x45:  // 1：0,1 标定当前位置为全开点
+              if (seq) { id(motor_cover).mark_open_here(); }
+              else { ESP_LOGW("ir", "Mark open rejected: wrong key sequence"); }
+              break;
+            case 0x47:  // 3：0,3 标定当前位置为全关点
+              if (seq) { id(motor_cover).mark_close_here(); }
+              else { ESP_LOGW("ir", "Mark close rejected: wrong key sequence"); }
+              break;
+            case 0x46:  // 2：0,2 清除标定
+              if (seq) { id(motor_cover).clear_calibration(); }
+              else { ESP_LOGW("ir", "Clear calibration rejected: wrong key sequence"); }
+              break;
+            case 0x44:  // 4：0,4 手动对时（SNTP 自动对时，此处仅提示）
+              if (seq) { ESP_LOGI("ir", "SNTP syncs automatically; no manual action needed"); }
+              break;
+            default:
+              ESP_LOGD("ir", "Unknown key: 0x%02X", cmd);
+              break;
+          }
+
+          prev_key = cmd;
+          prev_pos = pos;
+
+# ================================================================
+# HA 辅助实体
+# ================================================================
+
+# 标定与维护按钮（与红外组合键等价的 HA 通道）
+button:
+  - platform: restart
+    name: "重启升窗器"
+  - platform: template
+    name: "标定全开位置"
+    icon: mdi:arrow-up-bold-circle-outline
+    on_press:
+      - lambda: 'id(motor_cover).mark_open_here();'
+  - platform: template
+    name: "标定全关位置"
+    icon: mdi:arrow-down-bold-circle-outline
+    on_press:
+      - lambda: 'id(motor_cover).mark_close_here();'
+  - platform: template
+    name: "清除标定"
+    icon: mdi:eraser
+    on_press:
+      - lambda: 'id(motor_cover).clear_calibration();'
+
+# 电机转向开关（状态实时取自组件，红外切换后 HA 侧同步）
+switch:
+  - platform: template
+    name: "电机转向反转"
+    icon: mdi:swap-horizontal
+    lambda: 'return id(motor_cover).get_reverse();'
+    turn_on_action:
+      - lambda: 'id(motor_cover).set_reverse_persist(true);'
+    turn_off_action:
+      - lambda: 'id(motor_cover).set_reverse_persist(false);'
+
+# 传感器
+sensor:
+  - platform: wifi_signal
+    name: "WiFi 信号"
+    update_interval: 60s
+
+  - platform: uptime
+    name: "运行时长"
+    update_interval: 60s
