@@ -229,8 +229,15 @@ void MotorPIDCover::goto_pos_(long target) {
   good_samples_ = 0;
   stable_last_pos_ = last_pid_input_;
   stable_last_ms_ = millis();
+  // 方向语义（极性无关）：运动终点离哪个标定端点更近即为哪种操作——
+  // 靠近 full_open -> OPENING，靠近 full_close -> CLOSING。
+  // 不可用 target 与当前位置的差值正负判断：本机 full_open(-6862) 数值上
+  // 小于 full_close(2295)，"开"是脉冲下降方向，差值法与 >full_close_ 比较法
+  // 均会把 open 误报为 CLOSING（HA 图标/文案反转）。
+  long d_open = labs(target - full_open_);
+  long d_close = labs(target - full_close_);
   this->current_operation =
-      (target > last_pid_input_) ? cover::COVER_OPERATION_OPENING : cover::COVER_OPERATION_CLOSING;
+      (d_open <= d_close) ? cover::COVER_OPERATION_OPENING : cover::COVER_OPERATION_CLOSING;
   this->publish_state();
 }
 
